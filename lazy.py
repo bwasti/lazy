@@ -15,7 +15,7 @@ def log(s):
 
 class Task(object):
 
-    def __init__(self, iter_base=0.00001, iter_func=lambda x: x * 1.01):
+    def __init__(self, iter_base=0.0001, iter_func=lambda x: x * 1.01):
         self.spins = []
         self.iter_base = iter_base
         self.iter_func = iter_func
@@ -135,6 +135,12 @@ class Data(object):
                     p.run()
         return self.data
 
+    def set(self, data):
+        self.data = data
+        for d in nx.descendants(_graph, self):
+            if d.type == 'Data':
+                d.data = None
+
     def __repr__(self):
         return "Data_{}".format(self.id)
 
@@ -184,6 +190,28 @@ def synchronous(fn):
                 op.inputs[i].data = args[i]
             else:
                 op.inputs[i] = args[i]
+
+        _graph.add_node(op)
+        for inp in op.inputs:
+            _graph.add_node(inp)
+            _graph.add_edge(inp, op)
+        _graph.add_edge(op, op.output)
+
+        return op.output
+
+    return wrapper
+
+def asynchronous(fn):
+
+    def wrapper(*args):
+        op = Operation(fn)
+
+        op.inputs[0] = Data(Task())
+        for i in range(len(args)):
+            if not isinstance(args[i], Data):
+                op.inputs[i+1].data = args[i]
+            else:
+                op.inputs[i+1] = args[i]
 
         _graph.add_node(op)
         for inp in op.inputs:

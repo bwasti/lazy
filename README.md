@@ -77,8 +77,9 @@ print(time.time() - t)
 
 ## TODO
 
-- Add in-place annotations for functions that operate in-place
+- Support functions that operate in-place
 - Add asynchronuos API
+- Support maximal trace length (to automatically force calls to `get()`)
 
 ## Execution example
 

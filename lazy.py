@@ -1,11 +1,6 @@
 import threading
 import time
-import pygraphviz
 import networkx as nx
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-
-mpl.rcParams["figure.dpi"] = 300
 
 _graph = nx.DiGraph()
 debug = False
@@ -201,7 +196,15 @@ def synchronous(fn):
     return wrapper
 
 
+pygraphviz = None
+plt = None
 def _draw(G):
+    global pygraphviz
+    global plt
+    if not pygraphviz:
+        import pygraphviz
+    if not plt:
+        import matplotlib.pyplot as plt
     log("num nodes {}".format(len(G)))
     node_sizes = [400 for i in range(len(G))]
     pos = nx.nx_agraph.graphviz_layout(G, prog="dot")

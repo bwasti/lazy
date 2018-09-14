@@ -22,6 +22,8 @@ Try it out yourself!
 Decorate synchronous functions with `@lazy.synchronous`
 
 ````python
+import lazy
+
 @lazy.synchronous
 def Square(x):
     time.sleep(0.1)

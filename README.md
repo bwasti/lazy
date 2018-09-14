@@ -33,15 +33,29 @@ def Square(x):
 def Mul(x, y):
     time.sleep(0.1)
     return x * y
+
+@lazy.synchronous
+def Add(x, y):
+    time.sleep(0.1)
+    return x + y
 ````
 
 Write your program and access the output of annotated functions with `.get()`
 
 ````python
 a = Square(2)
-b = Square(a)
+b = Square(3)
+c = Mul(a, b)
+d = Add(a, b)
+
+t = time.time()
 # The code isn't run until you call .get()
-print(b.get())
+print(c.get())
+print(time.time() - t)
+
+t = time.time()
+print(d.get())
+print(time.time() - t)
 ````
 
 Run things in parallel automatically with `lazy.parallelize = True`

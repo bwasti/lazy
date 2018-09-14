@@ -1,5 +1,5 @@
 # lazy
-Python library for rapidly developing lazy interfaces.
+Python library for rapidly developing lazy interfaces.  This is currently a prototype built for playing with the paradigm.
 
 By deferring the execution of your code until the last possible moment (when you actually request the data with `.get()`)
 you can optimize its execution while preserving simple imperative semantics.

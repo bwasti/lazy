@@ -73,3 +73,15 @@ print(time.time() - t)
 # Should only take 0.2s instead of 0.3s by automatic parallelism
 ````
 
+# Execution example
+
+Below was generated with calls to `lazy.draw()`.
+
+Before calling `c.get()` in the above example we can see that only the input data is valid
+![](https://i.imgur.com/8jetAUY.png)
+
+After calling `c.get()` we can see that only `Mul` was invoked (and not `Add`)
+![](https://i.imgur.com/1MygD3H.png)
+
+Once we call `d.get()` `Add` is executed using the cached intermediate values calculated when we called `c.get()`
+![](https://i.imgur.com/2Hnf6XL.png)

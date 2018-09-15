@@ -14,13 +14,13 @@ def log(s):
 
 
 class Task(object):
-
-    def __init__(self, iter_base=0.0001, iter_func=lambda x: x * 1.01):
+    def __init__(self, iter_base=0.1, iter_func=lambda x: x):
         self.spins = []
         self.iter_base = iter_base
         self.iter_func = iter_func
 
     def spin(self):
+        self.iter_base = 0.1 / (len(self.spins) + 1)
         self.spins.append(0)
         i = self.iter_base
         while True:
@@ -31,7 +31,6 @@ class Task(object):
 
 
 class Thread(threading.Thread):
-
     def __init__(self, func, *args, **kwargs):
         threading.Thread.__init__(self)
         self.func = func
@@ -106,7 +105,6 @@ def _execute_graph(data):
 
 
 class Data(object):
-
     @classmethod
     def getId(cls, _impl=[-1]):
         _impl[0] += 1
@@ -138,7 +136,7 @@ class Data(object):
     def set(self, data):
         self.data = data
         for d in nx.descendants(_graph, self):
-            if d.type == 'Data':
+            if d.type == "Data":
                 d.data = None
 
     def __repr__(self):
@@ -146,7 +144,6 @@ class Data(object):
 
 
 class Operation(object):
-
     @classmethod
     def getId(cls, _impl=[-1]):
         _impl[0] += 1
@@ -179,9 +176,16 @@ class Operation(object):
         )
 
 
+def _insert_op_to_graph(op):
+    _graph.add_node(op)
+    for inp in op.inputs:
+        _graph.add_node(inp)
+        _graph.add_edge(inp, op)
+    _graph.add_edge(op, op.output)
+
+
 # todo handle kwargs
 def synchronous(fn):
-
     def wrapper(*args):
         op = Operation(fn)
 
@@ -191,34 +195,24 @@ def synchronous(fn):
             else:
                 op.inputs[i] = args[i]
 
-        _graph.add_node(op)
-        for inp in op.inputs:
-            _graph.add_node(inp)
-            _graph.add_edge(inp, op)
-        _graph.add_edge(op, op.output)
-
+        _insert_op_to_graph(op)
         return op.output
 
     return wrapper
 
-def asynchronous(fn):
 
+def asynchronous(fn):
     def wrapper(*args):
         op = Operation(fn)
 
         op.inputs[0] = Data(Task())
         for i in range(len(args)):
             if not isinstance(args[i], Data):
-                op.inputs[i+1].data = args[i]
+                op.inputs[i + 1].data = args[i]
             else:
-                op.inputs[i+1] = args[i]
+                op.inputs[i + 1] = args[i]
 
-        _graph.add_node(op)
-        for inp in op.inputs:
-            _graph.add_node(inp)
-            _graph.add_edge(inp, op)
-        _graph.add_edge(op, op.output)
-
+        _insert_op_to_graph(op)
         return op.output
 
     return wrapper
@@ -226,6 +220,8 @@ def asynchronous(fn):
 
 pygraphviz = None
 plt = None
+
+
 def _draw(G):
     global pygraphviz
     global plt

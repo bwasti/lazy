@@ -24,11 +24,10 @@ def Add(x, y):
 
 @lazy.asynchronous
 def Recv(t, ptr):
-    i = 0
+    # Around 10 spins before we break
     for _ in t.spin():
-        i += 1
-        # r = random.randint(0,200)
-        if i == 2:
+        r = random.randint(0,5)
+        if r == 2:
             break
     return ptr
 
@@ -61,15 +60,3 @@ class TestAsynchronous(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-    data = lazy.Data(2)
-    out = Recv(data)
-
-    lazy.parallelize = True
-    for i in range(2):
-        data.set(i)
-        t = time.time()
-        print(out.get())
-        print(time.time() - t)
-
-    # lazy.draw()

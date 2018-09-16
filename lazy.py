@@ -48,9 +48,7 @@ def _run_ops_in_parallel(ops):
     [t.join() for t in threads]
 
 
-# Data acquisition
-def _execute_graph(data):
-    log("executing graph")
+def _get_required_controlflow_graph(data):
     nodes = nx.ancestors(_graph, data)
     nodes.add(data)
     needed = [n for n in nodes if n.type == "Data" and n.data == None]
@@ -79,6 +77,13 @@ def _execute_graph(data):
         if len(controlflow.in_edges(node)) == 0:
             controlflow.add_edge(root_op, node)
 
+    return controlflow
+
+
+# Data acquisition
+def _execute_graph(data):
+    log("executing graph")
+    controlflow = _get_required_controlflow_graph(data)
     splits = []
     for n, idom in nx.immediate_dominators(controlflow, root_op).items():
         if n == idom:
@@ -114,6 +119,7 @@ class Data(object):
         self.data = d
         self.type = "Data"
         self.id = self.getId()
+        self.executor = None
         log("creating {}".format(self))
 
     def __eq__(self, other):
@@ -127,11 +133,19 @@ class Data(object):
             log("getting data")
         if parallelize and self.data is None:
             _execute_graph(self)
+        if self.executor and self.data is None:
+            self.executor(self)
         else:  # Default execution
             if self.data is None:
                 for p in _graph.predecessors(self):
                     p.run()
         return self.data
+
+
+    # Returns the calculated controlflow graph
+    def dump_cf(self):
+        return _get_required_controlflow_graph(self)
+
 
     def set(self, data):
         self.data = data
@@ -243,3 +257,6 @@ def _draw(G):
 
 def draw():
     _draw(_graph)
+
+def dump(self):
+    return _graph

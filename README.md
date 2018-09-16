@@ -75,10 +75,35 @@ print(time.time() - t)
 # Should only take 0.2s instead of 0.3s by automatic parallelism
 ````
 
+Asynchronous execution can be made synchronous with locking primitives.
+Functions annotated with `@lazy.asynchronous` are fed an extra input `t`
+of type `Task` which has a `spin` primitive.  See below:
+
+````python
+@lazy.asynchronous
+def Recv(t, ptr):
+    # Around 10 spins before we break
+    for _ in t.spin():
+        r = random.randint(0,10)
+        if r == 7:
+            break
+    return ptr # pretend we actually receieved something from network
+
+ptr = 0x123123
+d = Recv(ptr)
+print(d.get()) # 7
+````
+
+The idea here is that `spin` will periodically run the body of the loop until it is broken.
+The rate at which `spin` loops is determined by the runtime.
+After a couple of iterations of the *same* function,
+we can actually track how many spins it typically takes for the lock condition to be met and further optimize the rate at which spins happen.
+As an example, if it takes on average 100ms for the network to respond we can make the first spin take exactly 100ms and speed up all subsequent spins.
+This frees up cycles to work on other tasks in parallel.
+
 ## TODO
 
-- Support functions that operate in-place
-- Add asynchronuos API
+- Support functions that operate in-place and have multiple outputs
 - Support maximal trace length (to automatically force calls to `get()`)
 
 ## Execution example
@@ -93,3 +118,16 @@ After calling `c.get()` we can see that only `Mul` was invoked (and not `Add`)
 
 Once we call `d.get()` `Add` is executed using the cached intermediate values calculated when we called `c.get()`
 ![](https://i.imgur.com/2Hnf6XL.png)
+
+## Other small things
+
+- `data.dump_cf()` to get the calculated controlflow graph (networkx format) of data (i.e. what needs to be executed to generate it)
+- `data.executor = func` to set a sepecific executor for the node.  The executor must be of the form `func(data : Data) -> None`
+- `lazy.dump()` to get the full known dataflow graph (networkx format)
+- `lazy.draw()` to draw the full known dataflow graph (with colors as in the above example)
+
+If you really want to play with this I'd recommend attacking most ideas with networkx.
+As an example: to get a subgraph of all the data dependencies of `d` you can simply do
+````python
+subgraph = nx.subgraph(nx.ancestors(lazy.dump(), d))
+````

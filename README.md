@@ -122,7 +122,7 @@ Once we call `d.get()` `Add` is executed using the cached intermediate values ca
 ## Other small things
 
 - `data.dump_cf()` to get the calculated controlflow graph (networkx format) of data (i.e. what needs to be executed to generate it)
-- `data.executor = func` to set a sepecific executor for the node.  The executor must be of the form `func(data : Data) -> None`
+- `data.executor = func` to set a specific executor for the node.  The executor must be of the form `func(data : Data) -> None`
 - `lazy.dump()` to get the full known dataflow graph (networkx format)
 - `lazy.draw()` to draw the full known dataflow graph (with colors as in the above example)
 
